@@ -10,23 +10,27 @@ import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
+
+
 public class WeddingBuyerAgent extends Agent {
 	// The title of the wedding Service
 	private String targetServiceTitle;
 	// The list of known seller agents
 	private AID[] sellerAgents;
+	 
+	public double budget; 
+	public double servicePrice; 
+
 
 	// Put agent initializations here
 	protected void setup() {
-		// Printout a welcome message
-		System.out.println("Hallo! Buyer-agent "+getAID().getName()+" is ready.");
-
-	
+		budget = Math.random() * (10000.00- 5000.00); 
+		System.out.println("Comprador " + getAID().getName() + " listo con presupuesto de: " + budget); 
+		
 		Object[] args = getArguments();
 		if (args != null && args.length > 0) {
 			targetServiceTitle = (String) args[0];
 			System.out.println("Target wedding is "+targetServiceTitle);
-
 			// Add a TickerBehaviour that schedules a request to seller agents every minute
 			addBehaviour(new TickerBehaviour(this, 60000) {
 				protected void onTick() {
@@ -53,8 +57,7 @@ public class WeddingBuyerAgent extends Agent {
 					myAgent.addBehaviour(new RequestPerformer());
 				}
 			} );
-		}
-		else {
+		}else {
 			// Make the agent terminate
 			System.out.println("No target service title specified");
 			doDelete();
@@ -64,7 +67,7 @@ public class WeddingBuyerAgent extends Agent {
 	// Put agent clean-up operations here
 	protected void takeDown() {
 		// Printout a dismissal message
-		System.out.println("Buyer-agent "+getAID().getName()+" terminating.");
+		System.out.println("Comprador "+getAID().getName()+" finaliza.");
 	}
 
 
@@ -74,6 +77,8 @@ public class WeddingBuyerAgent extends Agent {
 		private int repliesCnt = 0; // The counter of replies from seller agents
 		private MessageTemplate mt; // The template to receive replies
 		private int step = 0;
+		ACLMessage msg;
+		ACLMessage reply; 
 
 		public void action() {
 			switch (step) {
@@ -116,7 +121,30 @@ public class WeddingBuyerAgent extends Agent {
 					block();
 				}
 				break;
-			case 2:
+			case 2: 
+				MessageTemplate mt1 = MessageTemplate.MatchPerformative(ACLMessage.PROPOSE);
+				msg = myAgent.receive(mt1);
+					if(msg.getPerformative() == ACLMessage.PROPOSE){
+						if(msg != null){
+							reply = msg.createReply(); 
+							servicePrice = Double.parseDouble(msg.getContent());
+							if(servicePrice < budget || servicePrice == budget){
+								reply.setPerformative(ACLMessage.PROPOSE);
+								reply.setContent(String.valueOf(servicePrice-100));
+							}else{
+								reply.setPerformative(ACLMessage.REFUSE);
+								reply.setContent("No se acepta");
+							}
+							send(reply); 	
+						}else{
+							step = 3; 
+						}
+					}else{
+						step = 3; 
+					}
+				break; 
+				
+			case 3:
 				// Send the purchase order to the seller that provided the best offer
 				ACLMessage order = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
 				order.addReceiver(bestSeller);
@@ -127,9 +155,9 @@ public class WeddingBuyerAgent extends Agent {
 				// Prepare the template to get the purchase order reply
 				mt = MessageTemplate.and(MessageTemplate.MatchConversationId("service-trade"),
 						MessageTemplate.MatchInReplyTo(order.getReplyWith()));
-				step = 3;
+				step = 4;
 				break;
-			case 3:      
+			case 4:      
 				// Receive the purchase order reply
 				reply = myAgent.receive(mt);
 				if (reply != null) {
@@ -144,7 +172,7 @@ public class WeddingBuyerAgent extends Agent {
 						System.out.println("Attempt failed: requested service already sold.");
 					}
 
-					step = 4;
+					step = 5;
 				}
 				else {
 					block();
@@ -161,4 +189,6 @@ public class WeddingBuyerAgent extends Agent {
 		}
 	}  // End of inner class RequestPerformer
 }
+
+
 

@@ -122,6 +122,14 @@ public class WeddingBuyerAgent extends Agent {
 				}
 				break;
 			case 2: 
+				ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
+				for (int i = 0; i < sellerAgents.length; ++i) {
+					cfp.addReceiver(sellerAgents[i]);
+				} 
+				cfp.setContent(targetServiceTitle);
+				cfp.setConversationId("service-trade");
+				cfp.setReplyWith("cfp"+System.currentTimeMillis()); // Unique value
+				
 				MessageTemplate mt1 = MessageTemplate.MatchPerformative(ACLMessage.PROPOSE);
 				msg = myAgent.receive(mt1);
 					if(msg.getPerformative() == ACLMessage.PROPOSE){
@@ -135,7 +143,8 @@ public class WeddingBuyerAgent extends Agent {
 								reply.setPerformative(ACLMessage.REFUSE);
 								reply.setContent("No se acepta");
 							}
-							send(reply); 	
+							myAgent.send(cfp);
+							myAgent.send(reply); 	
 						}else{
 							step = 3; 
 						}

@@ -13,7 +13,7 @@ import javax.swing.*;
 class ServiceSellerGui extends JFrame {	
 	private ServiceSellerAgent myAgent;
 	
-	private JTextField titleField, priceField;
+	private JTextField titleField, priceField, priceField2;
 	
 	ServiceSellerGui(ServiceSellerAgent a) {
 		super(a.getLocalName());
@@ -28,6 +28,9 @@ class ServiceSellerGui extends JFrame {
 		p.add(new JLabel("Price:"));
 		priceField = new JTextField(15);
 		p.add(priceField);
+		p.add(new JLabel("Min seller Price:"));
+		priceField2 = new JTextField(15);
+		p.add(priceField2);
 		getContentPane().add(p, BorderLayout.CENTER);
 		
 		JButton addButton = new JButton("Add");
@@ -36,9 +39,11 @@ class ServiceSellerGui extends JFrame {
 				try {
 					String title = titleField.getText().trim();
 					String price = priceField.getText().trim();
-					myAgent.updateCatalogue(title, Integer.parseInt(price));
+					String minPrice = priceField2.getText().trim();
+					myAgent.updateCatalogue(title, Integer.parseInt(price), Integer.parseInt(minPrice));
 					titleField.setText("");
 					priceField.setText("");
+					priceField2.setText("");
 				}
 				catch (Exception e) {
 					JOptionPane.showMessageDialog(ServiceSellerGui.this, "Invalid values. "+e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE); 

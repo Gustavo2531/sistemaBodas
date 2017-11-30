@@ -122,20 +122,22 @@ public class WeddingBuyerAgent extends Agent {
 				}
 				break;
 			case 2: 
-				ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
+				/**ACLMessage cfp2 = new ACLMessage(ACLMessage.CFP);
 				for (int i = 0; i < sellerAgents.length; ++i) {
-					cfp.addReceiver(sellerAgents[i]);
+					cfp2.addReceiver(sellerAgents[i]);
 				} 
-				cfp.setContent(targetServiceTitle);
-				cfp.setConversationId("service-trade");
-				cfp.setReplyWith("cfp"+System.currentTimeMillis()); // Unique value
-				
-				MessageTemplate mt1 = MessageTemplate.MatchPerformative(ACLMessage.PROPOSE);
-				msg = myAgent.receive(mt1);
-					if(msg.getPerformative() == ACLMessage.PROPOSE){
-						if(msg != null){
-							reply = msg.createReply(); 
-							servicePrice = Double.parseDouble(msg.getContent());
+				cfp2.setContent(targetServiceTitle);
+				cfp2.setConversationId("service-trade");
+				cfp2.setReplyWith("cfp"+System.currentTimeMillis()); // Unique value
+				System.out.println("Entre isa");**/
+				MessageTemplate mt1 = MessageTemplate.MatchConversationId("service-trade");
+				ACLMessage reply2 = myAgent.receive(mt1);
+				if(reply2 != null){
+					
+						if (reply2.getPerformative() == ACLMessage.PROPOSE) {
+						
+							reply = reply2.createReply(); 
+							servicePrice = Double.parseDouble(reply2.getContent());
 							if(servicePrice < budget || servicePrice == budget){
 								reply.setPerformative(ACLMessage.PROPOSE);
 								reply.setContent(String.valueOf(servicePrice-100));
@@ -143,14 +145,18 @@ public class WeddingBuyerAgent extends Agent {
 								reply.setPerformative(ACLMessage.REFUSE);
 								reply.setContent("No se acepta");
 							}
-							myAgent.send(cfp);
-							myAgent.send(reply); 	
+							
+							//myAgent.send(cfp);
+							myAgent.send(reply);
+							
 						}else{
 							step = 3; 
 						}
-					}else{
-						step = 3; 
-					}
+					
+				}else{
+					block();
+				}
+					
 				break; 
 				
 			case 3:

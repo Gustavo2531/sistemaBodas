@@ -21,7 +21,7 @@ class ServiceSellerGui extends JFrame {
 		myAgent = a;
 		
 		JPanel p = new JPanel();
-		p.setLayout(new GridLayout(2, 2));
+		p.setLayout(new GridLayout(4, 4));
 		p.add(new JLabel("Service title:"));
 		titleField = new JTextField(15);
 		p.add(titleField);

@@ -18,6 +18,7 @@ public class ServiceSellerAgent extends Agent {
 	private Hashtable catalogueMin;
 	private ServiceSellerGui myGui;
 	private Hashtable numberOfOrders;
+	private Integer numberOrders=0;
 	// Put agent initializations here
 	protected void setup() {
 		// Create the catalogue
@@ -46,6 +47,8 @@ public class ServiceSellerAgent extends Agent {
 
 		// Add the behaviour serving queries from buyer agents
 		addBehaviour(new OfferRequestsServer());
+		
+		//addBehaviour(new OfferRequestsServer2());
 
 		// Add the behaviour serving purchase orders from buyer agents
 		addBehaviour(new PurchaseOrdersServer());
@@ -92,7 +95,7 @@ public class ServiceSellerAgent extends Agent {
 				Integer price = (Integer) catalogue.get(title);
 				Integer minPrice = (Integer) catalogueMin.get(title);
 				if (price != null) {
-					numberOfOrders.put(msg.getSender().getName(), 0);
+					numberOfOrders.put(msg.getSender().getName(), numberOrders);
 					reply.setPerformative(ACLMessage.PROPOSE);
 					reply.setContent(String.valueOf(price.intValue()));
 				}
@@ -101,7 +104,62 @@ public class ServiceSellerAgent extends Agent {
 					reply.setPerformative(ACLMessage.REFUSE);
 					reply.setContent("not-available");
 				}
+				MessageTemplate mp = MessageTemplate.MatchPerformative(ACLMessage.PROPOSE);
+				ACLMessage msgp = myAgent.receive(mp);
+				
+				if(msgp!=null){
+					
+					
+					String spriceW = msgp.getContent();
+					ACLMessage reply2 = msgp.createReply();
+					//System.out.println("eNTRE AQUI");
+					
+					Double priceW = Double.parseDouble(spriceW);
+					System.out.println(priceW);
+					
+					numberOrders = (Integer) numberOfOrders.get(msgp.getSender().getName());
+					//System.out.println(numberOrders);
+					//&& numberOfOrders.get(msgp.getSender().getName())!=null
+					System.out.println(price);
+					System.out.println(minPrice);
+					if (priceW < price && priceW > minPrice) {
+						System.out.println(priceW);
+						//System.out.println("Fuck");
+						reply.setPerformative(ACLMessage.PROPOSE);
+						reply.setContent(String.valueOf(priceW.intValue()));
+						
+						numberOfOrders.put(msgp.getSender().getName(), numberOrders+1);
+					}else {
+						
+						//System.out.println("Entre final");
+						reply.setPerformative(ACLMessage.REFUSE);
+						reply.setContent("not-available");
+						/**
+						System.out.println("Entre Micha");
+						if(numberOfOrders.get(msgp.getSender().getName())==null){
+							numberOfOrders.put(msgp.getSender().getName(), numberOrders);
+						}
+						numberOrders = (Integer) numberOfOrders.get(msgp.getSender().getName());
+						if(numberOrders<2){
+							reply.setPerformative(ACLMessage.PROPOSE);
+							reply.setContent(String.valueOf(priceW.intValue()));
+							numberOfOrders.put(msgp.getSender().getName(), numberOrders+1);
+						}else{
+							System.out.println("Entre final");
+							reply.setPerformative(ACLMessage.REFUSE);
+							reply.setContent("not-available");
+						}**/
+					}
+					//myAgent.send(reply);
+					 
+				}else{
+					block();
+				}
+				
 				myAgent.send(reply);
+					
+				
+				
 			}
 			else {
 				block();
@@ -109,50 +167,7 @@ public class ServiceSellerAgent extends Agent {
 		}
 	}  // End of inner class OfferRequestsServer
 
-	private class OfferRequestsServer2 extends CyclicBehaviour {
-		public void action() {
-			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
-			ACLMessage msg = myAgent.receive(mt);
-			MessageTemplate mp = MessageTemplate.MatchPerformative(ACLMessage.PROPOSE);
-			ACLMessage msgp = myAgent.receive(mp);
-			if (msg != null && msgp != null) {
-				// CFP Message received. Process it
-				String title = msg.getContent();
-				ACLMessage reply = msg.createReply();
-				
-				String spriceW = msgp.getContent();
-				ACLMessage reply2 = msgp.createReply();
-				
-				Integer priceW = Integer.parseInt(spriceW);
-
-				Integer price = (Integer) catalogue.get(title);
-				Integer minPrice = (Integer) catalogueMin.get(title);
-				Integer numberOrders = (Integer) numberOfOrders.get(msgp.getSender().getName());
-				
-				if (priceW < price && priceW > minPrice && numberOfOrders.get(msgp.getSender().getName())!=null) {
-					
-					reply.setPerformative(ACLMessage.PROPOSE);
-					reply.setContent(String.valueOf(priceW.intValue()));
-				}
-				else {
-					if(numberOfOrders.get(msgp.getSender().getName())==null){
-						numberOfOrders.put(msgp.getSender().getName(), 0);
-					}
-					numberOrders = (Integer) numberOfOrders.get(msgp.getSender().getName());
-					if(numberOrders<3){
-						numberOfOrders.put(msgp.getSender().getName(), numberOrders+1);
-					}else{
-						reply.setPerformative(ACLMessage.REFUSE);
-						reply.setContent("not-available");
-					}
-				}
-				myAgent.send(reply);
-			}
-			else {
-				block();
-			}
-		}
-	} 
+	
 	private class PurchaseOrdersServer extends CyclicBehaviour {
 		public void action() {
 			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
